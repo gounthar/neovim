@@ -1,0 +1,39 @@
+name: Alt Arch Riscv64
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Neovim (riscv64)
+    runs-on: ubuntu-24.04-riscv
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build gettext cmake unzip curl \
+            build-essential luajit libluajit-5.1-dev
+
+      - name: Build deps (without bundled LuaJIT)
+        run: |
+          cmake -S cmake.deps -B .deps -DUSE_BUNDLED_LUAJIT=OFF
+          cmake --build .deps
+
+      - name: Build Neovim
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          time cmake --build build
+
+      - name: Verify
+        run: |
+          ./build/bin/nvim --version
+          file ./build/bin/nvim
