@@ -21,9 +21,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build gettext cmake unzip curl \
-            build-essential luajit libluajit-5.1-dev
+            build-essential
 
-      - name: Build deps (without bundled LuaJIT)
+      - name: Build LuaJIT from OpenResty fork (riscv64 support)
+        run: |
+          git clone --depth=1 -b v2.1-agentzh https://github.com/openresty/luajit2.git
+          cd luajit2
+          make -j$(nproc) PREFIX=/usr/local
+          sudo make install PREFIX=/usr/local
+          sudo ldconfig
+          luajit -v
+
+      - name: Build deps (with system LuaJIT)
         run: |
           cmake -S cmake.deps -B .deps -DUSE_BUNDLED_LUAJIT=OFF
           cmake --build .deps
